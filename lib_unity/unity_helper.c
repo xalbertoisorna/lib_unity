@@ -1,24 +1,12 @@
 // Copyright 2026 XMOS LIMITED.
 // This Software is subject to the terms of the XMOS Public Licence: Version 1.
-#if defined(__VX4B__)
+//
+// Gives the fixture's UnityTestRunner a fixed stack allowance for the XCC linker
+// (see unity_helper.h). Not needed with the RISC-V tools.
+#if defined(__VX4B__) && defined(LIB_UNITY_USE_FIXTURE) && !defined(UNITY_HELPER_RV_TOOLS)
 
-#ifndef UNITY_TEST_RUNNER_STACK_SIZE
-#define UNITY_TEST_RUNNER_STACK_SIZE 1024
-#endif
-
-/* Stringify helpers to force macro expansion */
-#define UNITY_STRINGIFY_(x) #x
-#define UNITY_STRINGIFY(x) UNITY_STRINGIFY_(x)
-
-/**
- * @brief Macro to declare XMOS linker resource annotations for a function.
- */
-#define UNITY_STACKFUNCTION(FN, BYTES) \
-    asm(".resource_list_empty " #FN ", \"callees\""); \
-    asm(".resource_list_empty " #FN ", \"tail_callees\""); \
-    asm(".resource_list_empty " #FN ", \"parallel_callees\""); \
-    asm(".resource_const " #FN ", \"stack_frame_bytes\", " UNITY_STRINGIFY(BYTES))
+#include "unity_helper.h"
 
 UNITY_STACKFUNCTION(UnityTestRunner, UNITY_TEST_RUNNER_STACK_SIZE);
 
-#endif // defined(__VX4B__)
+#endif // defined(__VX4B__) && defined(LIB_UNITY_USE_FIXTURE) && !defined(UNITY_HELPER_RV_TOOLS)

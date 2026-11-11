@@ -17,12 +17,13 @@ elseif(APP_BUILD_ARCH STREQUAL "vx4b") # vx4
 else() # native
     set(WNO_FPTR "")
 endif()
-set(LIB_COMPILER_FLAGS -Os ${WNO_FPTR})
+set(LIB_COMPILER_FLAGS -Os -Werror ${WNO_FPTR})
 
 # conditional sources and includes
 if(LIB_UNITY_USE_FIXTURE)
     list(APPEND LIB_INCLUDES Unity/extras/fixture/src)
     list(APPEND LIB_C_SRCS Unity/extras/fixture/src/unity_fixture.c)
+    list(APPEND LIB_COMPILER_FLAGS -DLIB_UNITY_USE_FIXTURE=1)
 endif()
 
 if(LIB_UNITY_USE_MEMORY)
@@ -30,14 +31,20 @@ if(LIB_UNITY_USE_MEMORY)
     list(APPEND LIB_C_SRCS Unity/extras/memory/src/unity_memory.c)
 endif()
 
-# Include the Unity Helper macros only when building with the transitional tools
-if(NOT XMOS_IS_RV AND APP_BUILD_ARCH STREQUAL "vx4b")
-    list(APPEND LIB_C_SRCS unity_helper.c)
+# Unity Helper: describes UnityTestRunner's function pointer calls to the linker.
+# Always built; the source itself is guarded (vx4 builds with the fixture enabled).
+list(APPEND LIB_C_SRCS unity_helper.c)
+if(XMOS_IS_RV)
+    list(APPEND LIB_COMPILER_FLAGS -DUNITY_HELPER_RV_TOOLS=1)
 endif()
 
 XMOS_REGISTER_MODULE()
 
 if(LIB_UNITY_AUTO_TEST_RUNNER)
+    if(APP_BUILD_ARCH STREQUAL "vx4b" AND NOT XMOS_IS_RV)
+        message(WARNING "lib_unity: the auto test runner calls the tests through function pointers, so the XCC linker cannot work out their stack usage and will warn about it")
+    endif()
+
     find_program(RUBY_EXE ruby REQUIRED)
 
     # Find all the build configs
@@ -46,6 +53,13 @@ if(LIB_UNITY_AUTO_TEST_RUNNER)
     # remove private xcommon variable which happens to have
     # this regex
     list(FILTER all_vars EXCLUDE REGEX "SOURCE_FILES_VARS")
+
+    # Build targets are <app>_<config>, or <app>_<config>_objlib with the RISC-V tools
+    if(XMOS_IS_RV)
+        set(target_suffix "_objlib")
+    else()
+        set(target_suffix "")
+    endif()
 
     foreach(source_config_var ${all_vars})
         string(REGEX MATCH "SOURCE_FILES_(.+)" ____ ${source_config_var})
@@ -60,7 +74,7 @@ if(LIB_UNITY_AUTO_TEST_RUNNER)
         endif()
 
         set(this_target ${APP_BUILD_TARGETS})
-        list(FILTER this_target INCLUDE REGEX ".*_${config_suffix}$$")
+        list(FILTER this_target INCLUDE REGEX ".*_${config_suffix}${target_suffix}$$")
 
         set(TEST_RUNNER ${CMAKE_CURRENT_BINARY_DIR}/${config_suffix}_runner.c)
         add_custom_command(
