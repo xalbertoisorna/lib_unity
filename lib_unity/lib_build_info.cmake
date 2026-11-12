@@ -31,13 +31,6 @@ if(LIB_UNITY_USE_MEMORY)
     list(APPEND LIB_C_SRCS Unity/extras/memory/src/unity_memory.c)
 endif()
 
-# Unity Helper: describes UnityTestRunner's function pointer calls to the linker.
-# Always built; the source itself is guarded (vx4 builds with the fixture enabled).
-list(APPEND LIB_C_SRCS unity_helper.c)
-if(XMOS_IS_RV)
-    list(APPEND LIB_COMPILER_FLAGS -DUNITY_HELPER_RV_TOOLS=1)
-endif()
-
 XMOS_REGISTER_MODULE()
 
 if(LIB_UNITY_AUTO_TEST_RUNNER)
