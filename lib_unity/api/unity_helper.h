@@ -4,24 +4,26 @@
 // UnityTestRunner calls each test's setup, body and teardown through function
 // pointers, so the XCC linker cannot work out its stack usage. UNITY_STACKFUNCTION
 // gives it a fixed stack allowance with resource directives (see unity_helper.c).
-#ifndef UNITY_HELPER_H
-#define UNITY_HELPER_H
-
-#ifndef UNITY_TEST_RUNNER_STACK_SIZE
-#define UNITY_TEST_RUNNER_STACK_SIZE 1024
-#endif
+#pragma once
 
 /* Stringify helpers to force macro expansion */
 #define UNITY_STRINGIFY_(x) #x
 #define UNITY_STRINGIFY(x) UNITY_STRINGIFY_(x)
 
-/**
- * @brief Macro to declare XMOS linker resource annotations for a function.
- */
+/* Macro to declare XMOS linker resource annotations for a function. */
+#if defined(UNITY_HELPER_RV_TOOLS)
+#define UNITY_STACKFUNCTION(FN, BYTES) \
+    asm(".pushsection .text." #FN "_stack_allowance,\"axR\",@progbits\n" \
+        ".globl " #FN "_stack_allowance\n" #FN "_stack_allowance:\n.popsection"); \
+    asm(".resource_const " #FN "_stack_allowance, \"stack_frame_bytes\", " UNITY_STRINGIFY(BYTES)); \
+    asm(".resource_list_empty " #FN "_stack_allowance, \"callees\""); \
+    asm(".resource_list_empty " #FN "_stack_allowance, \"tail_callees\""); \
+    asm(".resource_list_empty " #FN "_stack_allowance, \"parallel_callees\""); \
+    asm(".resource_list_add " #FN ", \"callees\", " #FN "_stack_allowance")
+#else // RV-XCC
 #define UNITY_STACKFUNCTION(FN, BYTES) \
     asm(".resource_list_empty " #FN ", \"callees\""); \
     asm(".resource_list_empty " #FN ", \"tail_callees\""); \
     asm(".resource_list_empty " #FN ", \"parallel_callees\""); \
     asm(".resource_const " #FN ", \"stack_frame_bytes\", " UNITY_STRINGIFY(BYTES))
-
-#endif // UNITY_HELPER_H
+#endif // defined(UNITY_HELPER_RV_TOOLS)

@@ -2,7 +2,7 @@
 /build/*build*/**/*.md
 **/.venv/**/*.md
 **/.venv/**/*.rst
-lib_unity/Unity/*
+third_party/*
 CHANGELOG.rst
 LICENSE.rst
 *.md

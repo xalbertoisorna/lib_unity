@@ -1,7 +1,9 @@
 set(LIB_NAME lib_unity)
 set(LIB_VERSION 2.8.0)
-set(LIB_INCLUDES Unity/src)
-set(LIB_C_SRCS Unity/src/unity.c)
+
+set(LIB_UNITY_UNITY_DIR ../third_party/Unity)
+set(LIB_INCLUDES api ${LIB_UNITY_UNITY_DIR}/src)
+set(LIB_C_SRCS ${LIB_UNITY_UNITY_DIR}/src/unity.c)
 set(LIB_DEPENDENT_MODULES "")
 
 # cmake options
@@ -21,19 +23,19 @@ set(LIB_COMPILER_FLAGS -Os -Werror ${WNO_FPTR})
 
 # conditional sources and includes
 if(LIB_UNITY_USE_FIXTURE)
-    list(APPEND LIB_INCLUDES Unity/extras/fixture/src)
-    list(APPEND LIB_C_SRCS Unity/extras/fixture/src/unity_fixture.c)
+    list(APPEND LIB_INCLUDES ${LIB_UNITY_UNITY_DIR}/extras/fixture/src)
+    list(APPEND LIB_C_SRCS ${LIB_UNITY_UNITY_DIR}/extras/fixture/src/unity_fixture.c)
     list(APPEND LIB_COMPILER_FLAGS -DLIB_UNITY_USE_FIXTURE=1)
 endif()
 
 if(LIB_UNITY_USE_MEMORY)
-    list(APPEND LIB_INCLUDES Unity/extras/memory/src)
-    list(APPEND LIB_C_SRCS Unity/extras/memory/src/unity_memory.c)
+    list(APPEND LIB_INCLUDES ${LIB_UNITY_UNITY_DIR}/extras/memory/src)
+    list(APPEND LIB_C_SRCS ${LIB_UNITY_UNITY_DIR}/extras/memory/src/unity_memory.c)
 endif()
 
 # Unity Helper: describes UnityTestRunner's function pointer calls to the linker.
 # Always built; the source itself is guarded (vx4 builds with the fixture enabled).
-list(APPEND LIB_C_SRCS unity_helper.c)
+list(APPEND LIB_C_SRCS src/unity_helper.c)
 if(XMOS_IS_RV)
     list(APPEND LIB_COMPILER_FLAGS -DUNITY_HELPER_RV_TOOLS=1)
 endif()
@@ -79,7 +81,7 @@ if(LIB_UNITY_AUTO_TEST_RUNNER)
         set(TEST_RUNNER ${CMAKE_CURRENT_BINARY_DIR}/${config_suffix}_runner.c)
         add_custom_command(
                          OUTPUT ${TEST_RUNNER}
-                         COMMAND ${RUBY_EXE} ${CMAKE_CURRENT_LIST_DIR}/Unity/auto/generate_test_runner.rb ${config_sources} ${TEST_RUNNER}
+                         COMMAND ${RUBY_EXE} ${CMAKE_CURRENT_LIST_DIR}/${LIB_UNITY_UNITY_DIR}/auto/generate_test_runner.rb ${config_sources} ${TEST_RUNNER}
                          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                          DEPENDS ${config_sources}
                          VERBATIM)
