@@ -1,6 +1,8 @@
+# lib name and version
 set(LIB_NAME lib_unity)
 set(LIB_VERSION 2.8.0)
 
+# source code
 set(LIB_UNITY_UNITY_DIR ../third_party/Unity)
 set(LIB_INCLUDES ${LIB_UNITY_UNITY_DIR}/src)
 set(LIB_C_SRCS ${LIB_UNITY_UNITY_DIR}/src/unity.c)
@@ -19,7 +21,13 @@ elseif(APP_BUILD_ARCH STREQUAL "vx4b") # vx4
 else() # native
     set(WNO_FPTR "")
 endif()
-set(LIB_COMPILER_FLAGS -Os -Werror ${WNO_FPTR})
+set(LIB_COMPILER_FLAGS -Os ${WNO_FPTR})
+
+# Unity calls each test through not annotated function pointers
+# Note: the error is also valid for xs3 but the report section will signal as MAYBE and cover the worst case. 
+if (APP_BUILD_ARCH STREQUAL "vx4b")
+    message(WARNING "lib_unity: UnityTestRunner stack usage is not calculable")
+endif()
 
 # conditional sources and includes
 if(LIB_UNITY_USE_FIXTURE)
@@ -35,17 +43,15 @@ endif()
 
 XMOS_REGISTER_MODULE()
 
-# Unity calls each test through a function pointer (see Known issues in README.rst)
-message(WARNING "lib_unity: UnityTestRunner stack usage is not calculable")
-
+# Auto test runner generation for each build config
 if(LIB_UNITY_AUTO_TEST_RUNNER)
     find_program(RUBY_EXE ruby REQUIRED)
 
     # Find all the build configs
     get_cmake_property(all_vars VARIABLES)
     list(FILTER all_vars INCLUDE REGEX "SOURCE_FILES_.*")
-    # remove private xcommon variable which happens to have
-    # this regex
+    
+    # remove private xcommon variable which happens to have this regex
     list(FILTER all_vars EXCLUDE REGEX "SOURCE_FILES_VARS")
 
     # Build targets are <app>_<config>, or <app>_<config>_objlib with the RISC-V tools
