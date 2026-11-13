@@ -50,17 +50,7 @@ Required tools
 Required libraries (dependencies)
 *********************************
 
-* None
-
-******************
-Third-party source
-******************
-
-This library uses the Unity test framework, unmodified, included as a submodule in
-``third_party/Unity``.
-
-* Upstream: https://github.com/ThrowTheSwitch/Unity
-* Upstream version: v2.6.1
+* Unity test framework (included as a submodule)
 
 *************************
 Related application notes
