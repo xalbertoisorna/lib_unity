@@ -1,8 +1,5 @@
-/build/*build*/**/*.rst
-/build/*build*/**/*.md
-**/.venv/**/*.md
-**/.venv/**/*.rst
+# The following patterns are to be excluded from the documentation build
+
+**CHANGELOG*
+**LICENSE*
 third_party/*
-CHANGELOG.rst
-LICENSE.rst
-*.md
